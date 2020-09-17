@@ -30,4 +30,10 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
 
+	Route{
+		Name:        "",
+		Method:      "",
+		Pattern:     "",
+		HandlerFunc: nil,
+	},
 }
