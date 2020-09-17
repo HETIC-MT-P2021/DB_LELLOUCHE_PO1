@@ -50,4 +50,10 @@ var routes = Routes{
 		Pattern:     "/orders/{id}/products",
 		HandlerFunc: controllers.GetOrderProducts,
 	},
+	Route{
+		Name:        "Get employees with office",
+		Method:      "GET",
+		Pattern:     "/employees",
+		HandlerFunc: controllers.GetEmployeesWithOffice,
+	},
 }
