@@ -28,7 +28,7 @@ services:
       MYSQL_DATABASE: classicmodels
       DB_HOST: tcp(db:3306)
     ports:
-      - "8080:8080"
+      - "8000:8000"
     volumes:
       - ./:/go:rw
     networks:
