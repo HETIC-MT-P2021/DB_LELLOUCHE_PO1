@@ -19,17 +19,17 @@ type Employee struct {
 	OfficeLocation string             `json:"office_location"`
 }
 
+type SimplifiedEmployee struct {
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
+}
+
 //Office is an office model
 type Office struct {
-	Code         string              `json:"office_code"`
-	City         string              `json:"city"`
-	Phone        string              `json:"phone"`
-	AddressLine1 string              `json:"address_line_1"`
-	AddressLine2 database.NullString `json:"address_line_2"`
-	State        database.NullString `json:"state"`
-	Country      string              `json:"country"`
-	PostalCode   string              `json:"postal_code"`
-	Territory    string              `json:"territory"`
+	Code      int64                 `json:"office_code"`
+	City      string                `json:"city"`
+	Country   string                `json:"country"`
+	Employees []*SimplifiedEmployee `json:"employees"`
 }
 
 //GetEmployeesWithOffice is requesting all employees and gives office additional info for each employee
@@ -75,4 +75,51 @@ func (repository *Repository) GetEmployeesWithOffice() ([]*Employee, error) {
 	}
 
 	return employees, nil
+}
+
+func (repository *Repository) GetOfficeEmployeesInfos(ID int64) (*Office, error) {
+	rows, err := repository.Conn.Query(`SELECT
+		o.city,
+		o.country,
+		e.firstName,
+		e.lastName
+	FROM
+		offices o
+		INNER JOIN employees e ON o.officeCode = e.officeCode
+	WHERE
+		o.officeCode = (?);`, ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not prepare query: %v", err)
+	}
+
+	var city, country, firstName, lastName string
+	var simplifiedEmployees []*SimplifiedEmployee
+	var office *Office
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&city, &country, &firstName, &lastName)
+		if err == sql.ErrNoRows {
+			return office, nil
+		}
+		if err != nil {
+			return nil, fmt.Errorf("could not scan rows: %v", err)
+		}
+
+		simplifiedEmployee := &SimplifiedEmployee{
+			LastName:  lastName,
+			FirstName: firstName,
+		}
+
+		simplifiedEmployees = append(simplifiedEmployees, simplifiedEmployee)
+	}
+
+	office = &Office{
+		Code:      ID,
+		City:      city,
+		Country:   country,
+		Employees: simplifiedEmployees,
+	}
+
+	return office, nil
 }
